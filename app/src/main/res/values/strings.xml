@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">FirebaseAuth</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- Strings related to login -->
+    <string name="default_web_client_id">219932199661-m91727k65jhv32tkq63ou4c82rtuskut.apps.googleusercontent.com</string>
+</resources>
