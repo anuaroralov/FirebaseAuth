@@ -1,37 +1,29 @@
 package com.example.firebaseauth.presentation
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.firebaseauth.R
 import com.example.firebaseauth.databinding.FragmentRegistrationBinding
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.auth
 
 class RegistrationFragment : Fragment() {
 
     private var _binding: FragmentRegistrationBinding? = null
-    private val binding
-        get() = _binding ?: throw RuntimeException("FragmentRegistrationBinding is null")
-    private lateinit var auth: FirebaseAuth
+    private val binding get() = _binding ?: throw RuntimeException("FragmentRegistrationBinding is null")
+
+    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentRegistrationBinding.inflate(inflater, container, false)
-        auth = Firebase.auth
         return binding.root
     }
 
@@ -40,24 +32,27 @@ class RegistrationFragment : Fragment() {
 
         setupTextWatchers()
         setupButtonListeners()
+
+        viewModel.registrationStatus.observe(viewLifecycleOwner) { isSuccess ->
+            if (isSuccess) {
+                Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.homeFragment)
+            } else {
+                Toast.makeText(context, "Registration failed", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupTextWatchers() {
         val clearError = { textField: TextInputLayout ->
-            textField.editText?.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
+            textField.editText?.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     textField.error = null
                 }
 
-                override fun afterTextChanged(s: Editable?) {}
+                override fun afterTextChanged(s: android.text.Editable?) {}
             })
         }
 
@@ -73,65 +68,51 @@ class RegistrationFragment : Fragment() {
             val confirmPassword = binding.textField3.editText?.text.toString().trim()
 
             if (validateForm(email, password, confirmPassword)) {
-                createAccount(email, password)
+                viewModel.createUserWithEmail(email, password)
             }
         }
 
         binding.button2.setOnClickListener {
-            findNavController().navigate(R.id.action_global_loginFragment)
+            findNavController().popBackStack()
         }
-
         binding.imageButton.setOnClickListener {
             signInWithGoogle()
         }
     }
 
-    private fun validateForm(email: String, password: String, confirmPassword: String): Boolean {
-        var valid = true
+    private fun signInWithGoogle() {
+        //TODO(Coming soon)
+        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+    }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.textField1.error = "Invalid email format."
-            valid = false
+    private fun validateForm(email: String, password: String, confirmPassword: String): Boolean {
+        var isValid = true
+
+        if (email.isEmpty()) {
+            binding.textField1.error = "Email cannot be empty"
+            isValid = false
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.textField1.error = "Invalid email format"
+            isValid = false
         }
 
         if (password.isEmpty()) {
-            binding.textField2.error = "Please enter a password."
-            valid = false
+            binding.textField2.error = "Password cannot be empty"
+            isValid = false
         } else if (password.length < 6) {
-            binding.textField2.error = "Password must be at least 6 characters."
-            valid = false
-        }
-        if (confirmPassword != password) {
-            binding.textField3.error = "Passwords do not match."
-            valid = false
+            binding.textField2.error = "Password must be at least 6 characters"
+            isValid = false
         }
 
-        return valid
-    }
-
-    private fun createAccount(email: String, password: String) {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(requireActivity()) { task ->
-                if (task.isSuccessful) {
-                    Log.d("Registration", "createUserWithEmail:success")
-                    val user = auth.currentUser
-                    updateUI(user)
-                } else {
-                    Log.w("Registration", "createUserWithEmail:failure", task.exception)
-                    Toast.makeText(context, "Authentication failed.", Toast.LENGTH_SHORT).show()
-                    updateUI(null)
-                }
-            }
-    }
-
-    private fun updateUI(user: FirebaseUser?) {
-        user?.let {
-            findNavController().navigate(R.id.action_global_homeFragment)
+        if (confirmPassword.isEmpty()) {
+            binding.textField3.error = "Please confirm your password"
+            isValid = false
+        } else if (password != confirmPassword) {
+            binding.textField3.error = "Passwords do not match"
+            isValid = false
         }
-    }
 
-    private fun signInWithGoogle() {
-        TODO("Coming soon")
+        return isValid
     }
 
     override fun onDestroyView() {
