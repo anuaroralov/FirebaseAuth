@@ -5,19 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.firebaseauth.R
 import com.example.firebaseauth.databinding.FragmentLoginBinding
 import com.google.android.material.textfield.TextInputLayout
 
-class LoginFragment : Fragment() {
+class LoginFragment : BaseAuthFragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding ?: throw RuntimeException("FragmentLoginBinding is null")
-
-    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -85,13 +81,10 @@ class LoginFragment : Fragment() {
         }
     }
 
-    private fun signInWithGoogle() {
-        //TODO(Coming soon)
-        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
 }
+

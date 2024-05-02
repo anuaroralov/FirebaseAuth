@@ -5,19 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.firebaseauth.R
 import com.example.firebaseauth.databinding.FragmentRegistrationBinding
 import com.google.android.material.textfield.TextInputLayout
 
-class RegistrationFragment : Fragment() {
+class RegistrationFragment : BaseAuthFragment() {
 
     private var _binding: FragmentRegistrationBinding? = null
     private val binding get() = _binding ?: throw RuntimeException("FragmentRegistrationBinding is null")
-
-    private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -78,11 +74,6 @@ class RegistrationFragment : Fragment() {
         binding.imageButton.setOnClickListener {
             signInWithGoogle()
         }
-    }
-
-    private fun signInWithGoogle() {
-        //TODO(Coming soon)
-        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
     }
 
     private fun validateForm(email: String, password: String, confirmPassword: String): Boolean {

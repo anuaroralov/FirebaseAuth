@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.main_container) as NavHostFragment?
         val navController = navHostFragment?.navController
 
-        if (viewModel.isUserLogin() != null && navController != null) {
+        if (viewModel.isUserLogin() && navController != null) {
             val actionId = R.id.action_global_homeFragment
             navController.navigate(actionId)
         }
