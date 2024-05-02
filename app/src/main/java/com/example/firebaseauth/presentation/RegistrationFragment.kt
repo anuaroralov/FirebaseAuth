@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.fragment.findNavController
+import com.example.firebaseauth.AuthResult
 import com.example.firebaseauth.R
 import com.example.firebaseauth.databinding.FragmentRegistrationBinding
 import com.google.android.material.textfield.TextInputLayout
@@ -13,7 +14,8 @@ import com.google.android.material.textfield.TextInputLayout
 class RegistrationFragment : BaseAuthFragment() {
 
     private var _binding: FragmentRegistrationBinding? = null
-    private val binding get() = _binding ?: throw RuntimeException("FragmentRegistrationBinding is null")
+    private val binding
+        get() = _binding ?: throw RuntimeException("FragmentRegistrationBinding is null")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,12 +31,24 @@ class RegistrationFragment : BaseAuthFragment() {
         setupTextWatchers()
         setupButtonListeners()
 
-        viewModel.registrationStatus.observe(viewLifecycleOwner) { isSuccess ->
-            if (isSuccess) {
-                Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show()
-                findNavController().navigate(R.id.homeFragment)
-            } else {
-                Toast.makeText(context, "Registration failed", Toast.LENGTH_SHORT).show()
+        viewModel.authStatus.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.homeFragment)
+                    viewModel.clearAuthStatus()
+                }
+
+                is AuthResult.Error -> {
+                    Toast.makeText(
+                        context,
+                        result.exception.message ?: "Registration failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                AuthResult.Loading -> binding.progressBar.visibility = View.VISIBLE
+                null->null
             }
         }
     }
@@ -42,10 +56,17 @@ class RegistrationFragment : BaseAuthFragment() {
     private fun setupTextWatchers() {
         val clearError = { textField: TextInputLayout ->
             textField.editText?.addTextChangedListener(object : android.text.TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     textField.error = null
+                    binding.button1.isEnabled = true
                 }
 
                 override fun afterTextChanged(s: android.text.Editable?) {}
@@ -64,6 +85,7 @@ class RegistrationFragment : BaseAuthFragment() {
             val confirmPassword = binding.textField3.editText?.text.toString().trim()
 
             if (validateForm(email, password, confirmPassword)) {
+                binding.button1.isEnabled = false // Disable button while loading
                 viewModel.createUserWithEmail(email, password)
             }
         }

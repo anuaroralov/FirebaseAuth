@@ -7,13 +7,17 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.example.firebaseauth.AuthResult
+import com.example.firebaseauth.R
 import com.example.firebaseauth.databinding.FragmentForgotYourPasswordBinding
 import com.google.android.material.textfield.TextInputLayout
 
 class ForgotYourPasswordFragment : Fragment() {
 
     private var _binding: FragmentForgotYourPasswordBinding? = null
-    private val binding get() = _binding ?: throw RuntimeException("FragmentForgotYourPasswordBinding is null")
+    private val binding
+        get() = _binding ?: throw RuntimeException("FragmentForgotYourPasswordBinding is null")
 
     private val viewModel: AuthViewModel by viewModels()
 
@@ -31,19 +35,24 @@ class ForgotYourPasswordFragment : Fragment() {
         setupTextWatchers()
         setupButtonListeners()
 
-        viewModel.resetEmailStatus.observe(viewLifecycleOwner) { isSuccess ->
-            if (isSuccess) {
-                Toast.makeText(
-                    context,
-                    "If an account with that email exists, we sent you an email to reset your password.",
-                    Toast.LENGTH_LONG
-                ).show()
-            } else {
-                Toast.makeText(
-                    context,
-                    "Failed to send reset email. Please try again later.",
-                    Toast.LENGTH_LONG
-                ).show()
+        viewModel.authStatus.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is AuthResult.Success -> {
+                    Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.action_global_homeFragment)
+                    viewModel.clearAuthStatus()
+                }
+
+                is AuthResult.Error -> {
+                    Toast.makeText(
+                        context,
+                        result.exception.message ?: "Login failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                AuthResult.Loading -> binding.progressBar.visibility = View.VISIBLE
+                null-> null
             }
         }
     }
@@ -51,7 +60,13 @@ class ForgotYourPasswordFragment : Fragment() {
     private fun setupTextWatchers() {
         val clearError = { textField: TextInputLayout ->
             textField.editText?.addTextChangedListener(object : android.text.TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     textField.error = null
@@ -74,6 +89,14 @@ class ForgotYourPasswordFragment : Fragment() {
                 binding.textField1.error = "Invalid email format"
             } else {
                 viewModel.sendPasswordResetEmail(email)
+                binding.button1.isEnabled = false
+
+                findNavController().popBackStack()
+                Toast.makeText(
+                    context,
+                    "Instructions how to reset password sent to your email",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
